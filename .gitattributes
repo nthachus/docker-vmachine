@@ -1,0 +1,16 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+* text=auto eol=lf
+
+# These are explicitly windows files and should use crlf
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+
+# These files are binary and should be left untouched
+*.tgz           binary
+*.zip           binary
+*.rar           binary
+*.deb           binary
+*.rpm           binary
+*.apk           binary

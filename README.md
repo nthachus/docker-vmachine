@@ -1,2 +1,3 @@
-# docker-vmachine
-VMware image as `docker-machine`
+# VMware `docker-machine`
+
+Implement Linux `docker-machine` on VMware Player, VirtualBox,...
