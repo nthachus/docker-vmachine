@@ -290,11 +290,13 @@ d-i partman/confirm_nooverwrite boolean true
 # option can result in an incomplete system and should only be used by very
 # experienced users.
 d-i base-installer/install-recommends boolean false
-#
-d-i base-installer/excludes string \
-    tasksel tasksel-data laptop-detect dmidecode \
-    task-english util-linux-locales ibritish iamerican ienglish-common dictionaries-common ispell wamerican emacsen-common
-#   console-setup console-setup-linux xkb-data keyboard-configuration kbd
+# libpipeline1?
+d-i base-installer/excludes string tasksel tasksel-data laptop-detect dmidecode \
+    vim-tiny vim-common xxd nano wget apt-utils libapt-inst2.0 bsdmainutils \
+    gnupg gnupg-agent pinentry-curses libassuan0 libksba8 libsqlite3-0 libreadline7 readline-common libnpth0 \
+    debconf-i18n liblocale-gettext-perl libtext-wrapi18n-perl libtext-charwidth-perl \
+    isc-dhcp-common libgdbm3 libpipeline1 libxapian30
+d-i base-installer/includes string libtext-iconv-perl
 
 # The kernel image (meta) package to be installed; "none" can be used if no
 # kernel is to be installed.
@@ -332,6 +334,8 @@ d-i apt-setup/services-select multiselect security, updates
 
 # Uncomment this to add multiarch configuration for i386
 #d-i apt-setup/multiarch string i386
+# Scan another CD or DVD?
+d-i apt-setup/cdrom/set-first boolean false
 
 
 ### Package selection
@@ -438,7 +442,7 @@ d-i debian-installer/exit/poweroff boolean true
 # This first command is run as early as possible, just after
 # preseeding is read.
 #d-i preseed/early_command string anna-install some-udeb
-d-i preseed/early_command string \
+d-i preseed/early_command string set -e; \
     echo '#!/bin/sh -e' > /usr/lib/post-base-installer.d/90skip-tasksel; \
     echo "sed -i 's/.*in-target .*tasksel/#&/' /var/lib/dpkg/info/pkgsel.postinst" >> /usr/lib/post-base-installer.d/90skip-tasksel; \
     echo 'rm -f /usr/lib/pre-pkgsel.d/10laptop-detect /usr/lib/pre-pkgsel.d/90popcon' >> /usr/lib/post-base-installer.d/90skip-tasksel; \
@@ -451,8 +455,9 @@ d-i preseed/early_command string \
     \
     echo '#!/bin/sh -e' > /usr/lib/base-installer.d/90apt-speedup; \
     echo 'mkdir -p /target/etc/dpkg/dpkg.cfg.d' >> /usr/lib/base-installer.d/90apt-speedup; \
-    echo 'echo "# Drop all man pages, documentation ...' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'echo "# Drop all man pages, translations, documentation ...' >> /usr/lib/base-installer.d/90apt-speedup; \
     echo 'path-exclude /usr/share/man/*/*' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'path-exclude /usr/share/locale/*/LC_MESSAGES/*.mo' >> /usr/lib/base-installer.d/90apt-speedup; \
     echo 'path-exclude /usr/share/doc/*' >> /usr/lib/base-installer.d/90apt-speedup; \
     echo '# ... except changelogs, copyright files' >> /usr/lib/base-installer.d/90apt-speedup; \
     echo 'path-include /usr/share/doc/*/copyright*' >> /usr/lib/base-installer.d/90apt-speedup; \
@@ -474,13 +479,17 @@ d-i partman/early_command string \
 # directly, or use the apt-install and in-target commands to easily install
 # packages and run commands in the target system.
 #d-i preseed/late_command string apt-install zsh; in-target chsh -s /bin/zsh
-d-i preseed/late_command string \
+d-i preseed/late_command string set -e; \
     echo 'force-unsafe-io' > /target/etc/dpkg/dpkg.cfg.d/apt-speedup; \
-    in-target apt-get purge --auto-remove -y eject; \
+    in-target apt-get purge --auto-remove -y 'linux-image-4.9.0-13*' eject; \
+    rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/*; \
+    \
     DOWNLOAD_URL='https://download.docker.com/linux/debian/dists/stretch/pool/stable/amd64'; \
     wget -qP /target/tmp/ "$DOWNLOAD_URL/containerd.io_1.2.13-2_amd64.deb" "$DOWNLOAD_URL/docker-ce_19.03.12~3-0~debian-stretch_amd64.deb"; \
     in-target sh -c 'dpkg --ignore-depends docker-ce-cli -i /tmp/*.deb'; \
-    rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/*; \
+    sed -i 's/ docker-ce-cli,//' /target/var/lib/dpkg/status*; \
+    rm -rf /target/tmp/* /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /usr/share/doc/*/*/; \
+    find /target/usr/share/doc/* -type f ! -name 'copyright*' ! -name 'changelog*' ! -name 'README*' -exec rm -f "{}" +; \
     \
     printf 'n\np\n1\n\n\nw\n' | fdisk /dev/sdb; \
     mkdir /target/var/lib/docker; \
@@ -510,7 +519,7 @@ d-i preseed/late_command string \
     in-target update-grub2
 
 # First boot script
-#sudo rm -rf /var/cache/apt/* /var/lib/apt/lists/* /tmp/* /tmp/.??*; \
+#sudo rm -rf /var/cache/apt/* /var/lib/apt/lists/* /var/log/installer /var/log/apt/term* /tmp/* /tmp/.??*; \
 #sudo sed -i 's/\(_DEFAULT=".*\) profile"/\1"/' /etc/default/grub; sudo update-grub2; \
 #sudo rm -rf .bash_history /tmp/* /tmp/.??* /var/log/vmware*.*.log; \
 #sudo truncate -s0 /var/log/syslog /var/log/messages /var/log/debug /var/log/kern.log /var/log/daemon.log /var/log/vmware*.log

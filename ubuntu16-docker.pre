@@ -523,20 +523,20 @@ d-i preseed/early_command string \
     echo "printf '#!/bin/sh\necho Ubuntu\n' > /target/usr/bin/lsb_release" >> /usr/lib/pre-pkgsel.d/50save-logs; \
     echo "chmod +x /target/usr/bin/lsb_release" >> /usr/lib/pre-pkgsel.d/50save-logs; \
     \
-    echo '#!/bin/sh -e' > /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'mkdir -p /target/etc/dpkg/dpkg.cfg.d' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'echo "# Drop all man pages, documentation ...' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'path-exclude /usr/share/man/*/*' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'path-exclude /usr/share/doc/*' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo '# ... except changelogs, copyright files' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'path-include /usr/share/doc/*/copyright*' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'path-include /usr/share/doc/*/changelog*' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'path-include /usr/share/doc/*/README*" > /target/etc/dpkg/dpkg.cfg.d/excludes' >> /usr/lib/base-installer.d/90optimize-apt; \
-    chmod +x /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'mkdir -p /target/etc/apt/apt.conf.d' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo "echo 'Acquire::Languages \"none\";' > /target/etc/apt/apt.conf.d/90no-languages" >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'echo "Acquire::GzipIndexes \"true\";' >> /usr/lib/base-installer.d/90optimize-apt; \
-    echo 'Acquire::CompressionTypes::Order:: \"gz\";" > /target/etc/apt/apt.conf.d/90gzip-indexes' >> /usr/lib/base-installer.d/90optimize-apt
+    echo '#!/bin/sh -e' > /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'mkdir -p /target/etc/dpkg/dpkg.cfg.d' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'echo "# Drop all man pages, documentation ...' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'path-exclude /usr/share/man/*/*' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'path-exclude /usr/share/doc/*' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo '# ... except changelogs, copyright files' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'path-include /usr/share/doc/*/copyright*' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'path-include /usr/share/doc/*/changelog*' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'path-include /usr/share/doc/*/README*" > /target/etc/dpkg/dpkg.cfg.d/excludes' >> /usr/lib/base-installer.d/90apt-speedup; \
+    chmod +x /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'mkdir -p /target/etc/apt/apt.conf.d' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo "echo 'Acquire::Languages \"none\";' > /target/etc/apt/apt.conf.d/90no-languages" >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'echo "Acquire::GzipIndexes \"true\";' >> /usr/lib/base-installer.d/90apt-speedup; \
+    echo 'Acquire::CompressionTypes::Order:: \"gz\";" > /target/etc/apt/apt.conf.d/90gzip-indexes' >> /usr/lib/base-installer.d/90apt-speedup
 
 # This command is run immediately before the partitioner starts. It may be
 # useful to apply dynamic partitioner preseeding that depends on the state
@@ -553,10 +553,12 @@ d-i partman/early_command string \
 d-i preseed/late_command string \
     echo 'force-unsafe-io' > /target/etc/dpkg/dpkg.cfg.d/apt-speedup; \
     in-target apt-get purge --auto-remove -y eject; \
+    rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/* /target/usr/bin/lsb_release; \
+    \
     DOWNLOAD_URL='https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64'; \
     wget -qP /target/tmp/ "$DOWNLOAD_URL/containerd.io_1.2.13-2_amd64.deb" "$DOWNLOAD_URL/docker-ce_19.03.12~3-0~ubuntu-xenial_amd64.deb"; \
     in-target sh -c 'dpkg --ignore-depends docker-ce-cli -i /tmp/*.deb'; \
-    rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/* /target/usr/bin/lsb_release; \
+    sed -i 's/ docker-ce-cli,//' /target/var/lib/dpkg/status*; rm -rf /target/tmp/*; \
     \
     printf 'n\np\n1\n\n\nw\n' | fdisk /dev/sdb; \
     mkdir /target/var/lib/docker; \
@@ -585,7 +587,7 @@ d-i preseed/late_command string \
     in-target update-grub2
 
 # First boot script
-#sudo rm -rf /var/cache/apt/* /var/lib/apt/lists/* /tmp/* /tmp/.??* ~/.cache; \
+#sudo rm -rf /var/cache/apt/* /var/lib/apt/lists/* /var/log/installer /var/log/apt/term* /tmp/* /tmp/.??* ~/.cache; \
 #sudo sed -i 's/\(_DEFAULT=".*\) profile"/\1"/' /etc/default/grub; sudo update-grub2; \
 #sudo rm -rf .bash_history /tmp/* /tmp/.??* /var/log/vmware*.*.log; \
 #sudo truncate -s0 /var/log/syslog /var/log/messages /var/log/debug /var/log/kern.log /var/log/daemon.log /var/log/vmware*.log
