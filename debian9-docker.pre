@@ -488,7 +488,7 @@ d-i preseed/late_command string set -e; \
     wget -qP /target/tmp/ "$DOWNLOAD_URL/containerd.io_1.2.13-2_amd64.deb" "$DOWNLOAD_URL/docker-ce_19.03.12~3-0~debian-stretch_amd64.deb"; \
     in-target sh -c 'dpkg --ignore-depends docker-ce-cli -i /tmp/*.deb'; \
     sed -i 's/ docker-ce-cli,//' /target/var/lib/dpkg/status*; \
-    rm -rf /target/tmp/* /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /usr/share/doc/*/*/; \
+    rm -rf /target/tmp/* /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /target/usr/share/doc/*/*/; \
     find /target/usr/share/doc/* -type f ! -name 'copyright*' ! -name 'changelog*' ! -name 'README*' -exec rm -f "{}" +; \
     \
     printf 'n\np\n1\n\n\nw\n' | fdisk /dev/sdb; \
