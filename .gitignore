@@ -6,3 +6,4 @@
 *.apk
 *.txt
 */
+!docs/

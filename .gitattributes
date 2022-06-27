@@ -4,13 +4,17 @@
 * text=auto eol=lf
 
 # These are explicitly windows files and should use crlf
-*.bat           text eol=crlf
-*.cmd           text eol=crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.vmx   text eol=crlf
 
 # These files are binary and should be left untouched
-*.tgz           binary
-*.zip           binary
-*.rar           binary
-*.deb           binary
-*.rpm           binary
-*.apk           binary
+*.tgz   binary
+*.zip   binary
+*.rar   binary
+*.deb   binary
+*.rpm   binary
+*.apk   binary
+*.png   binary
+*.jpg   binary
+*.gif   binary
