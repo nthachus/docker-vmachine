@@ -485,7 +485,7 @@ d-i preseed/late_command string set -e; \
     rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/*; \
     \
     DOWNLOAD_URL='https://download.docker.com/linux/debian/dists/stretch/pool/stable/amd64'; \
-    wget -qP /target/tmp/ "$DOWNLOAD_URL/containerd.io_1.2.13-2_amd64.deb" "$DOWNLOAD_URL/docker-ce_19.03.12~3-0~debian-stretch_amd64.deb"; \
+    wget -qP /target/tmp/ "$DOWNLOAD_URL/containerd.io_1.2.13-2_amd64.deb" "$DOWNLOAD_URL/docker-ce_19.03.15~3-0~debian-stretch_amd64.deb"; \
     in-target sh -c 'dpkg --ignore-depends docker-ce-cli -i /tmp/*.deb'; \
     sed -i 's/ docker-ce-cli,//' /target/var/lib/dpkg/status*; \
     rm -rf /target/tmp/* /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /target/usr/share/doc/*/*/; \

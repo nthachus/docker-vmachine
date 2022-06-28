@@ -37,10 +37,10 @@ sync
 
 
 # Answer file for setup-alpine script (SWAP_SIZE -s 4096)
-setup-alpine -c answerfile.cfg
+setup-alpine -c answer-file.cfg
 sed -i -e 's/ alpine-test/ docker-alpine/' -e 's/\(PROXYOPTS\)=.*/\1="none"/' -e 's/\(APKREPOSOPTS\)=.*/\1="-1"/' \
-    -e 's/ \(openssh\|openntpd\)"/ none"/' -e 's/-m data /-m sys /' answerfile.cfg
-echo 'y' | setup-alpine -e -f answerfile.cfg
+    -e 's/ \(openssh\|openntpd\)"/ none"/' -e 's/-m data /-m sys /' answer-file.cfg
+echo 'y' | setup-alpine -e -f answer-file.cfg
 
 
 # Post-installation
