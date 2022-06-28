@@ -1,54 +1,39 @@
 #!/bin/sh
 set -e
 
-# create self-signed CA
-[ -s ca-key.pem ] || openssl genrsa -out ca-key.pem
+# OpenSSL config file
+_SSL_CONF="${TMPDIR:=/tmp}/docker-ssl.cnf"
+
+cp -f "$(dirname "$0")/${_SSL_CONF##*/}" "$TMPDIR"
+echo "IP.3 = ${1:-$(ip r | grep '\.0/' | sed 's|^ *\([0-9.]*\)\.0/.*|\1.128|')}" >> "$_SSL_CONF"
+
+# Create self-signed CA
 # openssl genrsa -des3 -out ca-key.pem
-openssl req -x509 -new -key ca-key.pem -out ca.pem -nodes -sha256 -days 3650 -subj "/O=Docker CE" -extensions docker_ca -config <( cat `openssl version -d | sed 's,^.*"\(.*\)",\1/openssl.cnf,'`; echo "
-[docker_ca]
-keyUsage = critical, keyCertSign, digitalSignature, keyEncipherment, keyAgreement
-basicConstraints = critical, CA:true
-" )
+[ -s ca-key.pem ] || openssl genrsa -out ca-key.pem
+
+openssl req -x509 -new -key ca-key.pem -out ca.pem -nodes -sha256 -days 3650 -subj "/O=Docker CE" -config "$_SSL_CONF"
 openssl x509 -text -noout -in ca.pem > ca.txt
 
-
-# create server certificate
+# Create server certificate
 [ -s server-key.pem ] || openssl genrsa -out server-key.pem
-openssl req -new -key server-key.pem -out server.csr -nodes -sha256 -subj "/O=Docker CE/CN=docker-machine"
+openssl req -new -key server-key.pem -out server.csr -nodes -sha256 -subj "/O=Docker CE/CN=docker-machine" \
+    -config "$_SSL_CONF"
 
-openssl x509 -req -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server.pem -sha256 -days 3650 -extfile <( echo "
-keyUsage = critical, digitalSignature, keyEncipherment, keyAgreement
-extendedKeyUsage = serverAuth
-basicConstraints = critical, CA:FALSE
-subjectAltName = @alt_names
-
-[alt_names]
-DNS.1 = localhost
-DNS.2 = *.lvh.me
-DNS.3 = [::1]
-IP.1 = 127.0.0.1
-IP.2 = fe80::1
-IP.3 = 192.168.139.128
-" )
+openssl x509 -req -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server.pem -sha256 -days 3650 \
+    -extfile "$_SSL_CONF" -extensions server_ext
 openssl x509 -text -noout -in server.pem > server.txt
 
-
-# create client certificate
+# Create client certificate
 [ -s key.pem ] || openssl genrsa -out key.pem
-openssl req -new -key key.pem -out client.csr -nodes -subj "/O=Docker CE/CN=docker-bootstrap"
+openssl req -new -key key.pem -out client.csr -nodes -subj "/O=Docker CE/CN=docker-bootstrap" -config "$_SSL_CONF"
 
-openssl x509 -req -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -days 3650 -extfile <( echo "
-keyUsage = critical, digitalSignature
-extendedKeyUsage = clientAuth
-basicConstraints = critical, CA:FALSE
-" )
+openssl x509 -req -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -days 3650 \
+    -extfile "$_SSL_CONF" -extensions client_ext
 openssl x509 -text -noout -in cert.pem > cert.txt
 
+# Generate SSH key
+[ -s id_rsa ] || ssh-keygen -t rsa -b 2048 -q -C "docker@lvh.me" -N "" -f id_rsa || true
 
-# generate SSH key
-[ -s id_rsa ] || ssh-keygen -t rsa -C "docker@lvh.me" -f id_rsa -q -N "" || true
-
-
-# cleanup
+# Cleanup
 [ -s certificates.tgz ] || tar --remove-files -czf certificates.tgz *.pem id_rsa* || true
 rm -f *.srl *.csr
