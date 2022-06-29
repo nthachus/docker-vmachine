@@ -5,7 +5,7 @@ set -e
 _SSL_CONF="${TMPDIR:=/tmp}/docker-ssl.cnf"
 
 cp -f "$(dirname "$0")/${_SSL_CONF##*/}" "$TMPDIR"
-echo "IP.3 = ${1:-$(ip r | grep '\.0/' | sed 's|^ *\([0-9.]*\)\.0/.*|\1.128|')}" >> "$_SSL_CONF"
+echo "IP.3 = ${1:-$(ip r | grep '\.0/' | sed 's,\.0/.*,.128,')}" >> "$_SSL_CONF"
 
 # Create self-signed CA
 # openssl genrsa -des3 -out ca-key.pem
@@ -35,5 +35,7 @@ openssl x509 -text -noout -in cert.pem > cert.txt
 [ -s id_rsa ] || ssh-keygen -t rsa -b 2048 -q -C "docker@lvh.me" -N "" -f id_rsa || true
 
 # Cleanup
-[ -s certificates.tgz ] || tar --remove-files -czf certificates.tgz *.pem id_rsa* || true
+if [ ! -s certificates.tgz ]; then
+  tar -czf certificates.tgz *.pem id_rsa* || true; rm -f *.pem id_rsa*
+fi
 rm -f *.srl *.csr
