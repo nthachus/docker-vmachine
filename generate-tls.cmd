@@ -41,14 +41,13 @@ REM Generate SSH key
 IF NOT EXIST id_rsa ssh-keygen -t rsa -b 2048 -q -C "docker@lvh.me" -N "" -f id_rsa
 
 REM Cleanup
-IF NOT EXIST certificates.tgz (
-    WHERE tar >NUL 2>&1 && (
-        tar -czf certificates.tgz *.pem id_rsa* & DEL /F /Q *.pem id_rsa*
-    ) || (
-        SET _7Z_EXEC=7za
-        FOR /F "skip=2 tokens=2*" %%H IN ('REG QUERY "HKCU\Software\7-Zip" /v Path') DO SET "_7Z_EXEC=%%~dpI7z"
-
-        "%_7Z_EXEC%" a -ttar -so -an -sdel *.pem id_rsa* | "%_7Z_EXEC%" a -si certificates.tgz
-    )
+IF EXIST certificates.tgz GOTO cleanup
+WHERE /Q tar && (
+    tar -czf certificates.tgz *.pem id_rsa* & DEL /F /Q *.pem id_rsa* & GOTO cleanup
 )
+SET _7Z_EXEC=7za
+FOR /F "skip=2 tokens=2*" %%H IN ('REG QUERY "HKCU\Software\7-Zip" /v Path') DO SET "_7Z_EXEC=%%~dpI7z"
+
+"%_7Z_EXEC%" a -ttar -so -an -sdel *.pem id_rsa* | "%_7Z_EXEC%" a -si certificates.tgz
+:cleanup
 DEL /F /Q *.srl *.csr
