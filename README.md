@@ -75,4 +75,46 @@ Recommended:
 
 ## Setup Docker machine on Debian 9
 
+```bash
+# For the first boot
+sudo rm -rf /var/cache/apt/* /var/lib/apt/lists/* /var/log/installer /var/log/apt/term* /tmp/* /tmp/.??*; \
+sudo sed -i 's/\(_DEFAULT *= *"[^"]*\) profile/\1/' /etc/default/grub; sudo update-grub2; \
+sudo rm -rf .bash_history /tmp/* /tmp/.??* /var/log/vmware*.*.log; \
+sudo truncate -s0 /var/log/syslog /var/log/messages /var/log/debug /var/log/kern.log /var/log/daemon.log /var/log/vmware*.log; \
+sudo poweroff
+```
+
 ## Setup Docker machine on Alpine Linux 3
+
+Start a local static web server to provide setup files
+
+- Execute `python -m http.server 8080` for installed `Python 3` (`SimpleHTTPServer` for `Python 2`)
+- Or execute `C:\Apps\tools-x64\simple-http-server -i -p 8080 .` (extracted from [misc/tools-win64.zip](./misc/tools-win64.zip))
+
+*Or using CDROM as temporary storage to send setup files (in an ISO image) to the VM*
+
+Boot to ISO image `alpine-virt-3.11.13-x86_64.iso` on the created `alpine3-docker` VM, then get the setup script
+
+```bash
+printf '\n\n\n' | setup-interfaces
+ifup eth0
+wget -q "http://$(ip r | grep '\.0/' | sed 's,\.0/.*,.1,'):8080/alpine3-docker-setup.sh"
+ifdown eth0
+
+# Install automatically
+chmod +x *.sh
+./alpine3-docker-setup.sh
+```
+
+Finally, disable auto-connect physical CDROM for the VM and reboot
+
+```bash
+# For the first boot
+sudo truncate -s0 /var/log/messages /var/log/dmesg /var/log/*.log; \
+sudo poweroff
+```
+
+## Note
+
+- To reduce VM disk(s) size, boot to `SystemRescueCD` on the installed Docker VM,
+  and run `zerofree -v /dev/sda2` (`/dev/sda3` for `Alpine Linux`), then compact HDD(s) using `VMware Workstation`
