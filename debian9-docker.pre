@@ -445,7 +445,7 @@ d-i debian-installer/exit/poweroff boolean true
 d-i preseed/early_command string set -e; \
     echo '#!/bin/sh -e' > /usr/lib/post-base-installer.d/90skip-tasksel; \
     echo "sed -i 's/.*in-target .*tasksel/#&/' /var/lib/dpkg/info/pkgsel.postinst" >> /usr/lib/post-base-installer.d/90skip-tasksel; \
-    echo 'rm -f /usr/lib/pre-pkgsel.d/{10laptop-detect,90popcon}' >> /usr/lib/post-base-installer.d/90skip-tasksel; \
+    echo 'rm -f /usr/lib/pre-pkgsel.d/10laptop-detect /usr/lib/pre-pkgsel.d/90popcon' >> /usr/lib/post-base-installer.d/90skip-tasksel; \
     chmod +x /usr/lib/post-base-installer.d/90skip-tasksel; \
     \
     sed -i 's/^ *apt.*install.*\(keyboard-configuration\|console-setup\)/#&/' /usr/lib/base-installer.d/20console-setup; \
@@ -484,11 +484,12 @@ d-i preseed/late_command string set -e; \
     in-target apt-get purge --auto-remove -y 'linux-image-4.9.0-13*' eject; \
     rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/*; \
     \
-    wget -qP /target/tmp/ https://download.docker.com/linux/debian/dists/stretch/pool/stable/amd64/{containerd.io_1.2.13-2,docker-ce_19.03.15~3-0~debian-stretch}_amd64.deb; \
+    DL_BASE='https://download.docker.com/linux/debian/dists/stretch/pool/stable/amd64'; \
+    wget -qP /target/tmp/ "$DL_BASE/containerd.io_1.2.13-2_amd64.deb" "$DL_BASE/docker-ce_19.03.15~3-0~debian-stretch_amd64.deb"; \
     in-target sh -c 'dpkg --ignore-depends docker-ce-cli -i /tmp/*.deb'; \
     sed -i 's/ docker-ce-cli, */ /' /target/var/lib/dpkg/status*; \
     rm -rf /target/tmp/* /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /target/usr/share/doc/*/*/; \
-    find /target/usr/share/doc/* -type f ! -name 'copyright*' ! -name 'changelog*' ! -name 'README*' -delete; \
+    find /target/usr/share/doc/* -type f ! -name 'copyright*' ! -name 'changelog*' ! -name 'README*' -exec rm -f {} +; \
     \
     printf 'n\np\n1\n\n\nw\n' | fdisk /dev/sdb; \
     mkdir -p /target/var/lib/docker; \
@@ -498,7 +499,7 @@ d-i preseed/late_command string set -e; \
     echo 'docker  ALL=(ALL:ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/docker; \
     chmod 0440 /target/etc/sudoers.d/docker; \
     \
-    ( wget -qO- "http://$(ip r | grep '\.0/' | sed 's,\.0/.*,.1,'):8080/certificates.tgz" | tar -C /tmp -x ) || true; \
+    ( wget -qO- "http://$(ip r | grep '\.0/' | sed 's,\.0/.*,.1,'):8080/certificates.tgz" | tar -C /tmp -xz ) || true; \
     sed -i -e 's/^# *\(PermitRootLogin\).*/\1 no/' -e 's/^\(X11Forwarding\).*/\1 no/' /target/etc/ssh/sshd_config; \
     ( cd /target/home/docker; mkdir -p .ssh; [ ! -s /tmp/id_rsa.pub ] || cp -pf /tmp/id_rsa.pub .ssh/authorized_keys; chmod -R 0600 .ssh; chmod 0700 .ssh ); \
     in-target chown -R docker: /home/docker/.ssh; \
@@ -507,8 +508,8 @@ d-i preseed/late_command string set -e; \
     printf '.host:/\t/mnt/hgfs\tfuse.vmhgfs-fuse\tallow_other\t0 0\n' >> /target/etc/fstab; \
     \
     [ ! -s /tmp/server-key.pem ] && \
-        sed -i 's,^ExecStart.*-H fd://.*,& -H tcp://0.0.0.0:2375,' /target/lib/systemd/system/docker.service || \
-        sed -i 's,^ExecStart.*-H fd://.*,& -H tcp://0.0.0.0:2376 --tlsverify,' /target/lib/systemd/system/docker.service; \
+        sed -i 's,^ExecStart.* fd://.*,& -H tcp://0.0.0.0:2375,' /target/lib/systemd/system/docker.service || \
+        sed -i 's,^ExecStart.* fd://.*,& -H tcp://0.0.0.0:2376 --tlsverify,' /target/lib/systemd/system/docker.service; \
     ( cd /target/root; mkdir -p .docker; [ ! -s /tmp/server-key.pem ] || cp -pf /tmp/server-key.pem .docker/key.pem; \
         [ ! -s /tmp/server.pem ] || cp -pf /tmp/server.pem .docker/cert.pem; [ ! -s /tmp/ca.pem ] || cp -pf /tmp/ca.pem .docker/; chmod -R o-r .docker; chmod 0750 .docker ); \
     in-target systemctl enable docker.service containerd.service; \
