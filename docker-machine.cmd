@@ -1,7 +1,6 @@
 @ECHO OFF
 SetLocal
 
-IF DEFINED DOCKER_MACHINE_VMX GOTO parse_arguments
 IF EXIST "%DOCKER_MACHINE_VMX%" GOTO parse_arguments
 
 ECHO Correct environment variables to process

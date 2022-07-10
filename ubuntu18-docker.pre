@@ -406,7 +406,7 @@ tasksel tasksel/first multiselect
 
 # Individual additional packages to install
 d-i pkgsel/include string efibootmgr 'open-vm-tools=2:10.2.0-3ubuntu3' fuse openssh-server \
-    'containerd=1.2.6-0ubuntu1~18.04.2' 'docker.io=19.03.6-0ubuntu1~18.04.2'
+    iptables xz-utils ca-certificates
 # Whether to upgrade packages after debootstrap.
 # Allowed values: none, safe-upgrade, full-upgrade
 #d-i pkgsel/upgrade select none
@@ -559,8 +559,13 @@ d-i partman/early_command string \
 d-i preseed/late_command string set -e; \
     echo 'force-unsafe-io' > /target/etc/dpkg/dpkg.cfg.d/apt-speedup; \
     in-target apt-get purge --auto-remove -y eject libusb-1.0-0; \
-    rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/* /target/usr/bin/lsb_release /target/usr/bin/docker \
-        /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /target/usr/share/doc/*/*/; \
+    rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/* /target/usr/bin/lsb_release; \
+    \
+    DL_BASE='https://download.docker.com/linux/ubuntu/dists/bionic/pool/stable/amd64'; \
+    wget -qP /target/tmp/ "$DL_BASE/containerd.io_1.2.13-2_amd64.deb" "$DL_BASE/docker-ce_19.03.15~3-0~ubuntu-bionic_amd64.deb"; \
+    in-target sh -c 'dpkg --ignore-depends docker-ce-cli -i /tmp/*.deb'; \
+    sed -i 's/ docker-ce-cli, */ /' /target/var/lib/dpkg/status*; \
+    rm -rf /target/tmp/* /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /target/usr/share/doc/*/*/; \
     find /target/usr/share/doc/* -type f ! -name 'copyright*' ! -name 'changelog*' ! -name 'README*' -exec rm -f {} +; \
     \
     printf 'n\np\n1\n\n\nw\n' | fdisk /dev/sdb; \

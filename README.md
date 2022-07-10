@@ -85,11 +85,11 @@ Recommended:
 - VM name: debian9-docker
 - CPU: 1 / Core: 4 (correspond with the system)
 - Memory: 4GB (or 2GB for `Alpine Linux`)
-- Printer: <none>
-- Sound: <none>
-- USB: <none>
+- Printer: <None>
+- Sound: <None>
+- USB: <None>
 - Network: NAT (generated MAC)
-- Display: <auto>
+- Display: <Auto>
 - CDROM: <Use ISO image: path\to\debian-9.13.0-amd64-netinst.iso>
 - HDD1: 8GB
 - HDD2: 20GB
@@ -161,7 +161,7 @@ sudo truncate -s0 /var/log/messages /var/log/dmesg /var/log/*.log; \
 history -c; sudo poweroff
 ```
 
-## Setup Docker machine on Ubuntu 16/18
+## Setup Docker machine on Ubuntu 16
 
 Start a local static web server to provide preseed and generated certificate files
 (@see [Setup Docker machine on Debian 9](#setup-docker-machine-on-debian-9))
