@@ -85,11 +85,11 @@ Recommended:
 - VM name: debian9-docker
 - CPU: 1 / Core: 4 (correspond with the system)
 - Memory: 4GB (or 2GB for `Alpine Linux`)
-- Printer: <None>
-- Sound: <None>
-- USB: <None>
+- Printer: `<Removed>`
+- Sound: `<Removed>`
+- USB: `<Removed>`
 - Network: NAT (generated MAC)
-- Display: <Auto>
+- Display: <Auto without 3D accelerator>
 - CDROM: <Use ISO image: path\to\debian-9.13.0-amd64-netinst.iso>
 - HDD1: 8GB
 - HDD2: 20GB
