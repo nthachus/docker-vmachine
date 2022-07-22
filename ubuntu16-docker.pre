@@ -557,7 +557,7 @@ d-i preseed/late_command string set -e; \
     rm -rf /target/var/cache/apt/* /target/var/lib/apt/lists/* /target/tmp/* /target/usr/bin/lsb_release; \
     \
     DL_BASE='https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64'; \
-    wget -qP /target/tmp/ "$DL_BASE/containerd.io_1.2.13-2_amd64.deb" "$DL_BASE/docker-ce_19.03.15~3-0~ubuntu-xenial_amd64.deb"; \
+    wget -qP /target/tmp/ "$DL_BASE/containerd.io_1.4.6-1_amd64.deb" "$DL_BASE/docker-ce_20.10.7~3-0~ubuntu-xenial_amd64.deb"; \
     in-target sh -c 'dpkg --ignore-depends docker-ce-cli -i /tmp/*.deb'; \
     sed -i 's/ docker-ce-cli, */ /' /target/var/lib/dpkg/status*; \
     rm -rf /target/tmp/* /target/usr/share/locale/*/LC_MESSAGES/*.mo /target/usr/share/man/*/*.gz /target/usr/share/man/*/*/*.gz /target/usr/share/doc/*/*/; \

@@ -156,9 +156,17 @@ Finally, correct CDROM configurations (e.g. using raw-cdrom, disable auto-connec
 
 ```bash
 # For the first boot
-sudo rm -rf .ash_history /tmp/* /tmp/.??*; \
+sudo rm -rf .ash_history /var/cache/apk/* /tmp/* /tmp/.??*; \
 sudo truncate -s0 /var/log/messages /var/log/dmesg /var/log/*.log; \
 history -c; sudo poweroff
+```
+
+*To install EFI boot entry:*
+
+```bash
+sudo apk add --no-cache --virtual=.efibootmgr efibootmgr; \
+sudo efibootmgr -c -L 'Alpine Linux' -d /dev/sda -p 1 -l /EFI/alpine/grubx64.efi; \
+sudo apk del --no-cache .efibootmgr
 ```
 
 ## Setup Docker machine on Ubuntu 16

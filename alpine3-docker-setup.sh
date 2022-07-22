@@ -11,7 +11,7 @@ sed -i -e 's,/dev/usbdisk[ \t]*/media,#&,' \
 sed -i 's,"# *\([^"]*\}/community\)","\1",' /sbin/setup-apkrepos
 
 # Additional packages
-echo "apk update -q
+echo "apk add --no-cache open-vm-tools-hgfs || true
     apk add --no-cache open-vm-tools openssh-server sudo iptables docker-engine
 
     rc-update add fuse boot
@@ -40,7 +40,7 @@ setup-alpine -c answer-file.cfg
 sed -i -e 's/ alpine-test/ docker-alpine/' \
     -e 's/\(PROXYOPTS\) *=.*/\1="none"/' -e 's/\(APKREPOSOPTS\) *=.*/\1="-1"/' \
     -e 's/ \(openssh\|openntpd\)"/ none"/' -e 's/-m data /-m sys /' answer-file.cfg
-echo 'y' | setup-alpine -e -f answer-file.cfg
+echo 'y' | KERNELOPTS='quiet swapaccount=1' setup-alpine -e -f answer-file.cfg
 
 
 # Post-installation
@@ -75,7 +75,7 @@ cp -af /home/docker /mnt/home/
 )
 
 #echo 'ip_tables' > /mnt/etc/modules-load.d/iptables.conf
-sed -i 's/\(SAVE_RESTORE_OPTIONS\) *=.*/\1=""/' /mnt/etc/conf.d/iptables
+sed -i 's/\(SAVE_RESTORE_OPTIONS\) *=.*/\1=""/' /mnt/etc/conf.d/ip*tables
 
 # Configure Docker engine
 [ ! -s /tmp/server-key.pem ] && \
